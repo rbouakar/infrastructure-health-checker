@@ -1,0 +1,8 @@
+# Logs générés par le programme
+logs/*.log
+
+# Historique des checks (optionnel si vous voulez le garder)
+# data/checks_history.csv
+
+# Fichiers temporaires
+*.tmp
