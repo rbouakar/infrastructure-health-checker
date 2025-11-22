@@ -4,47 +4,48 @@
 # Fonctions pour afficher et enregistrer des logs
 
 # Définir les couleurs
+VERT='\033[0;32m'
+JAUNE='\033[1;33m'
+ROUGE='\033[0;31m'
+NC='\033[0m'
 
 # Définir le fichier de log 
 
+LOG_FILE="logs/health_check.log"
+
 
 log_info() {
-    echo "[INFO] $1"
+    local message="$1"
+    echo "[INFO] ${message}"
+    log_to_file "INFO" "${message}" 
 }
 
 log_success() {
-    echo -e "\033[0;32m [SUCCESS] $1\033[0m"
+    local message="$1"
+    echo -e "${VERT}[SUCCESS] ${message}${NC}"
+    log_to_file "SUCCESS" "${message}"
 }
 
 log_warning() {
-    echo -e "\033[1;33m [WARNING] $1\033[0m"
+    local message="$1"
+    echo -e "${JAUNE}[WARNING] ${message}${NC}"
+    log_to_file "[WARNING]" "${message}"
 }
 
 log_error() {
-    echo -e "\033[0;31m [ERROR] $1\033[0m"
+    local message="$1"
+    echo -e "${ROUGE}[ERROR] ${message}${NC}"
+    log_to_file "[ERROR]" "${message}"
 }
 
 log_to_file() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local level="$1"
+    local message="$2"
+    local timestamp
+    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     mkdir -p logs
 
-    if [[ "$1" == "INFO" ]]; then
-        message=$(log_info "$2")
-
-        echo "${timestamp} ${message}" >> logs/health_check.log
-    fi
-
-    if [[ "$1" == "ERROR" ]]; then
-        message=$(log_error "$2")
-
-        echo "${timestamp} ${message}" >> logs/health_check.log
-    fi
-
-    if [[ "$1" == "SUCCESS" ]]; then
-        message=$(log_success "$2")
-
-        echo "${timestamp} ${message}" >> logs/health_check.log
-    fi
+    echo "[${timestamp}] [${level}] ${message}" >> "${LOG_FILE}"
 
 }
 
