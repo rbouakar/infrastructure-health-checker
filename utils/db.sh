@@ -14,16 +14,17 @@ read_sites() {
     return 1
     fi
 
-    echo "=== Sites configurés ==="
+    log_info "Liste des sites configurés :"
     echo ""
+
     local i=0
 
     while IFS= read -r type url interval description; do
         if [[ ! -z "${type}" ]] && [[ ! "${type}" =~ ^#.* ]]; then 
             i=$((i + 1))
         
-            printf "  %2d. %-30s [%s]\n" "${i}" "${url}" "${type}"
-            printf "      Interval: %ss | %s\n" "${interval}" "${description}"
+            printf "%2d. %-30s [%s]\n" "${i}" "${url}" "${type}"
+            printf "Interval: %ss | %s\n" "${interval}" "${description}"
             echo ""
         fi
 
