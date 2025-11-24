@@ -9,6 +9,7 @@ SITES="config/sites.conf"
 LOGS="logs/health_check.log"
 
 show_menu() {
+    clear
     echo "========================================"
     echo "  INFRASTRUCTURE HEALTH CHECKER"
     echo "========================================"
@@ -19,7 +20,8 @@ show_menu() {
     echo "4. Vérifier un site spécifique"
     echo "5. Vérifier tous les sites HTTP"
     echo "6. Voir les derniers logs"
-    echo "7. Quitter"
+    echo "7. Afficher l'historique d'un site"
+    echo "8. Quitter"
     echo ""
 
 }
@@ -58,7 +60,7 @@ option_3_remove_site() {
     read -p "Entrez l'URL du site à supprimer : " url
     read -p "Etes-vous sûr de vouloir supprimer ce site ? (o/N)" reponse
 
-    if [[ "${reponse}" = "o" ]];then    
+    if [[ "${reponse}" =~ ^[oO]$ ]];then    
         remove_site "${url}"
     else
         echo "Annulation de la suppression de ${url}"
@@ -94,12 +96,13 @@ option_5_all_sites() {
     local up=0
     local down=0
 
-    while IFS= read -r type url intervalle description;do
+    while IFS='|' read -r type url intervalle description;do
             [[ -z "${type}" ]] && continue
             [[ "${type}" =~ ^#.* ]] && continue
 
         if [[ "${type}" = "HTTP" ]];then
             check_http "${url}"
+            echo ""
 
             if [[ $? -eq 0 ]];then
                 up=$((up+1))
@@ -108,7 +111,7 @@ option_5_all_sites() {
             fi
         fi
 
-    done < ${SITES}
+    done < "${SITES}"
 
     local tot=$((up + down))
 
@@ -132,9 +135,20 @@ option_6_log() {
 
 }
 
-option_7_quitter() {
+option_7_history() {
     clear
     echo "[Option 7 sélectionnée]"
+    echo ""
+    read -p "Entrez l'URL du site : " url
+    show_history_by_url "${url}"
+    echo ""
+    read -p "Appuyez sur Entrée pour continuer..."
+
+}
+
+option_8_quitter() {
+    clear
+    echo "[Option 8 sélectionnée]"
     echo ""
     log_info "Merci d'avoir utilisé Infrastructure Health Checker !"
     echo "Au revoir"
@@ -155,7 +169,8 @@ main() {
             4) option_4_check_site;;
             5) option_5_all_sites;;
             6) option_6_log;;
-            7) option_7_quitter;;
+            7) option_7_history;;
+            8) option_8_quitter;;
             *) log_error "Option invalide" ;;
         esac
     done

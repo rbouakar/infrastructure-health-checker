@@ -1,5 +1,6 @@
 #!/bin/bash
 source utils/logger.sh
+source utils/db.sh
 
 check_http() {
     if [[ $# -ne 1 ]];then
@@ -18,17 +19,19 @@ check_http() {
     IFS='|' read -r status_code response_time <<< "${response}"
 
     if ! [[ "${status_code}" =~ ^[0-9]+$ ]];then
+        save_check_result "HTTP" "${url}" "DOWN" "${status_code}" "${response_time}" "network fail"
         log_error "Site DOWN - Status: ${status_code} - Erreur: Erreur réseau"
         return 1
     fi
 
     if [[ ${status_code} -eq 0 ]]; then
-        log_error "Site DOWN - Status: 000 - Erreur réseau (timeout, DNS fail, connexion refusée)"
+        save_check_result "HTTP" "${url}" "DOWN" "${status_code}" "${response_time}" "network fail"
+        log_error "Site DOWN - Status: 000 - Erreur réseau"
         return 1
     fi
 
     if [[ "${status_code}" -ge 200 ]] && [[ "${status_code}" -lt 400 ]];then
-        # Vérifier si le site est lent (> 3 secondes)
+        save_check_result "HTTP" "${url}" "UP" "${status_code}" "${response_time}" ""
         if (( $(echo "${response_time} > 3" | bc -l) )); then
             log_warning "Site UP mais lent - Status: ${status_code} - Temps: ${response_time}s"
         else
@@ -38,11 +41,13 @@ check_http() {
     fi
 
     if [[ "${status_code}" -gt 399 ]] && [[ "${status_code}" -lt 500 ]]; then
+        save_check_result "HTTP" "${url}" "DOWN" "${status_code}" "${response_time}" "client fail"
         log_error "Site DOWN - Status: ${status_code} - Erreur: Erreur client"
         return 1
     fi
 
     if [[ "${status_code}" -gt 499 ]] && [[ "${status_code}" -lt 600 ]]; then
+        save_check_result "HTTP" "${url}" "DOWN" "${status_code}" "${response_time}" "server fail"
         log_error "Site DOWN - Status: ${status_code} - Erreur: Erreur serveur"
         return 1
     fi
